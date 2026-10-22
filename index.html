@@ -1,9 +1,336 @@
-<html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daniel Rose</title>
+<meta name="description" content="Daniel Rose's projects: a shared household calendar, a game library browser, a disk usage visualizer and a Windows dock.">
+<meta name="theme-color" content="#1e1f1c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1e1f1c;
+    --surface: #272822;
+    --surface-2: #2f302a;
+    --border: #3e3d32;
+    --fg: #f8f8f2;
+    --muted: #a59f85;
+    --comment: #75715e;
+    --pink: #f92672;
+    --orange: #fd971f;
+    --yellow: #e6db74;
+    --green: #a6e22e;
+    --cyan: #66d9ef;
+    --purple: #ae81ff;
+    --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(174, 129, 255, 0.10), transparent 60%),
+      radial-gradient(700px 420px at -10% 10%, rgba(249, 38, 114, 0.08), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
+    color: var(--fg);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: rgba(102, 217, 239, 0.28); }
+
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 4px; }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* nav */
+  header.nav {
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(10px);
+    background: rgba(30, 31, 28, 0.78);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .brand { font-family: var(--mono); font-weight: 700; color: var(--fg); letter-spacing: -0.02em; }
+  .brand span { color: var(--pink); }
+  .nav nav { display: flex; gap: 22px; font-family: var(--mono); font-size: 0.85rem; }
+  .nav nav a { color: var(--muted); }
+  .nav nav a:hover { color: var(--fg); text-decoration: none; }
+
+  /* hero */
+  .hero { padding: 96px 0 72px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.9rem; color: var(--comment); margin-bottom: 18px; }
+  .eyebrow b { color: var(--green); font-weight: 500; }
+  h1 {
+    font-size: clamp(2.6rem, 7vw, 4.6rem);
+    font-weight: 700; letter-spacing: -0.035em; line-height: 1.05;
+  }
+  h1 .grad {
+    background: linear-gradient(100deg, var(--pink), var(--orange) 45%, var(--yellow));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lede { margin-top: 22px; max-width: 620px; font-size: 1.15rem; color: var(--muted); }
+  .cta { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 0.9rem; font-weight: 500;
+    padding: 10px 18px; border-radius: 8px;
+    border: 1px solid var(--border); color: var(--fg); background: var(--surface);
+    transition: border-color .15s, transform .15s;
+  }
+  .btn:hover { border-color: var(--cyan); text-decoration: none; transform: translateY(-1px); }
+  .btn.primary { background: var(--pink); border-color: var(--pink); color: #fff; }
+  .btn.primary:hover { border-color: var(--orange); background: #ff3d85; }
+
+  /* sections */
+  section { padding: 48px 0; }
+  .section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 28px; }
+  h2 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
+  h2 .hash { font-family: var(--mono); color: var(--purple); margin-right: 8px; }
+  .section-head .rule { flex: 1; height: 1px; background: var(--border); }
+  .count { font-family: var(--mono); font-size: 0.8rem; color: var(--comment); }
+
+  /* project grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+
+  .card {
+    --accent: var(--cyan);
+    position: relative;
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px 26px 22px;
+    overflow: hidden;
+    transition: border-color .2s, transform .2s, box-shadow .2s;
+  }
+  .card::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+    background: var(--accent); opacity: .9;
+  }
+  .card:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+    transform: translateY(-3px);
+    box-shadow: 0 14px 40px -18px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .card.a-pink   { --accent: var(--pink); }
+  .card.a-green  { --accent: var(--green); }
+  .card.a-cyan   { --accent: var(--cyan); }
+  .card.a-orange { --accent: var(--orange); }
+  .card.a-purple { --accent: var(--purple); }
+
+  .card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .path { font-family: var(--mono); font-size: 0.8rem; color: var(--comment); }
+  .path b { color: var(--accent); font-weight: 500; }
+  .status {
+    font-family: var(--mono); font-size: 0.72rem; padding: 3px 10px; border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--border));
+    color: var(--accent); white-space: nowrap;
+  }
+  .status::before { content: "● "; font-size: .65em; vertical-align: .12em; }
+
+  .card h3 { font-size: 1.35rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .tagline { color: var(--accent); font-weight: 500; font-size: 0.95rem; margin-bottom: 12px; }
+  .card p { color: var(--muted); font-size: 0.95rem; }
+  .card ul { list-style: none; margin: 16px 0 4px; display: grid; gap: 7px; }
+  .card li { position: relative; padding-left: 20px; font-size: 0.92rem; color: #d6d4c4; }
+  .card code { font-family: var(--mono); font-size: 0.85em; color: var(--yellow); }
+  .card li::before { content: "›"; position: absolute; left: 4px; color: var(--accent); font-family: var(--mono); font-weight: 700; }
+
+  .tags { margin-top: auto; padding-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    font-family: var(--mono); font-size: 0.75rem;
+    padding: 3px 10px; border-radius: 6px;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+  }
+
+  /* coursework */
+  .course {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px 26px; font-family: var(--mono); font-size: 0.9rem;
+  }
+  .course .k { color: var(--pink); }
+  .course .c { color: var(--comment); }
+  .course ul { list-style: none; margin-top: 8px; display: grid; gap: 4px; }
+
+  footer { margin-top: 48px; border-top: 1px solid var(--border); padding: 28px 0 44px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; font-family: var(--mono); font-size: 0.82rem; color: var(--comment); }
+
+  @media (max-width: 560px) {
+    .nav nav { gap: 14px; }
+    .hero { padding: 64px 0 48px; }
+    .card { padding: 22px 20px 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .card, .btn { transition: none; }
+  }
+</style>
+</head>
 <body>
-<h1>Daniel Rose's Portfolio</h1>
-<h2>CIS 350</h2>
-<h3><a href="https://github.com/tunnellm/GVSU-CIS350-TEAM_18">Team 18 Calendar Project</a><h3>
-<h3><a href="https://github.com/danieldcrrose/CIS350-HW2-Rose">Homework 2</a><h3>
-<p>I'm hosted with GitHub Pages.</p>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top">daniel<span>.</span>rose</a>
+    <nav aria-label="Primary">
+      <a href="#projects">projects</a>
+      <a href="#coursework">coursework</a>
+      <a href="https://github.com/danieldcrrose">github</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap">
+    <div class="hero">
+      <p class="eyebrow"><b>~/development</b> $ ls projects/</p>
+      <h1>Hi, I'm <span class="grad">Daniel&nbsp;Rose</span>.</h1>
+      <p class="lede">I build software across the stack: desktop apps in Rust and Electron, and a full-stack calendar that ships to the web, Android and iOS.</p>
+      <div class="cta">
+        <a class="btn primary" href="#projects">See projects</a>
+        <a class="btn" href="https://github.com/danieldcrrose">github.com/danieldcrrose</a>
+      </div>
+    </div>
+
+    <section id="projects">
+      <div class="section-head">
+        <h2><span class="hash">#</span>Projects</h2>
+        <span class="rule"></span>
+        <span class="count">5 projects</span>
+      </div>
+
+      <div class="grid">
+
+        <article class="card a-pink">
+          <div class="card-top">
+            <span class="path"><b>~/</b>shared-calendar</span>
+            <span class="status">v1, Android</span>
+          </div>
+          <h3>Shared Calendar</h3>
+          <p class="tagline">A calendar for two, built for rotating shift work.</p>
+          <p>Ordinary calendars handle irregular rotas badly. Shared Calendar is designed around entering shifts quickly: pick a shift from a palette, tap the days, and a week takes about five interactions instead of thirty-five. Each partner sees the other's shifts labelled and coloured, without being able to read or edit their jobs.</p>
+          <ul>
+            <li>Household of two, with invite codes and QR joining</li>
+            <li>Shifts belong to jobs, jobs belong to a person</li>
+            <li>Password reset by emailed code, JWT sessions with refresh</li>
+            <li>One web build, wrapped by Capacitor for Android</li>
+          </ul>
+          <div class="tags">
+            <span class="tag">Java 21</span><span class="tag">Spring Boot</span><span class="tag">PostgreSQL</span><span class="tag">Flyway</span><span class="tag">React 19</span><span class="tag">TypeScript</span><span class="tag">Capacitor</span><span class="tag">Testcontainers</span>
+          </div>
+        </article>
+
+        <article class="card a-purple">
+          <div class="card-top">
+            <span class="path"><b>~/</b>shared-calendar-ios</span>
+            <span class="status">awaiting Xcode</span>
+          </div>
+          <h3>Shared Calendar for iOS</h3>
+          <p class="tagline">The iPhone build of the same calendar.</p>
+          <p>A Capacitor shell around the exact React bundle the Android app wraps, so there is no second implementation and every web change reaches both phones. The Xcode project and App Store paperwork are written; it is waiting on a Mac to compile and a signing team.</p>
+          <ul>
+            <li>Swift Package Manager, no CocoaPods</li>
+            <li>Build script that pulls the web bundle from the main repo</li>
+            <li>Documented platform differences and design decisions</li>
+          </ul>
+          <div class="tags">
+            <span class="tag">Capacitor 8</span><span class="tag">Swift Package Manager</span><span class="tag">WKWebView</span><span class="tag">Xcode</span>
+          </div>
+        </article>
+
+        <article class="card a-green">
+          <div class="card-top">
+            <span class="path"><b>~/</b>game-browser</span>
+            <span class="status">v1.0</span>
+          </div>
+          <h3>Game Browser</h3>
+          <p class="tagline">Every installed game, one visual grid.</p>
+          <p>A local desktop app that scans your installed games across Steam, Epic, Xbox, Battle.net, Riot Games and Ubisoft Connect and shows them together with cover art, playtime, last played and achievements. A fallback scanner also finds games installed outside any launcher.</p>
+          <ul>
+            <li>Achievements, friends list and OS notifications on new unlocks</li>
+            <li>Backlog tags, favourites, hidden games and playtime stats</li>
+            <li>Per-game and per-drive disk usage view</li>
+            <li>Runs entirely locally with a sandboxed renderer and a minimal IPC surface</li>
+          </ul>
+          <div class="tags">
+            <span class="tag">Electron</span><span class="tag">Node.js</span><span class="tag">JavaScript</span><span class="tag">Playwright</span><span class="tag">electron-builder</span>
+          </div>
+        </article>
+
+        <article class="card a-cyan">
+          <div class="card-top">
+            <span class="path"><b>~/</b>disk-usage-manager</span>
+            <span class="status">in development</span>
+          </div>
+          <h3>Disk Usage Manager</h3>
+          <p class="tagline">See where your disk went, then reclaim it safely.</p>
+          <p>A fast, visual alternative to WinDirStat and TreeSize. A parallel scanner walks the drive and streams progress while an animated treemap lets you zoom into folders. Anything you delete goes to the recycle bin, never a hard delete.</p>
+          <ul>
+            <li>Squarified treemap and sunburst views over the same data</li>
+            <li>Parallel scanning with <code>jwalk</code> and <code>rayon</code></li>
+            <li>SQLite snapshot cache: reopen scans, diff growth over time</li>
+            <li>Confirm-then-trash deletion flow</li>
+          </ul>
+          <div class="tags">
+            <span class="tag">Rust</span><span class="tag">Tauri</span><span class="tag">TypeScript</span><span class="tag">D3</span><span class="tag">SQLite</span>
+          </div>
+        </article>
+
+        <article class="card a-orange">
+          <div class="card-top">
+            <span class="path"><b>~/</b>new-win-dock</span>
+            <span class="status">in development</span>
+          </div>
+          <h3>New Win Dock</h3>
+          <p class="tagline">A macOS-style dock to replace the Windows 11 taskbar.</p>
+          <p>The stock taskbar can't be themed or tuned much. This native Rust dock sits where the taskbar normally is, with pinned and running apps, a Start button that hands off to the real Windows search, a system tray, and a clock and quick-settings cluster.</p>
+          <ul>
+            <li>Runtime toggle to hide or show the real taskbar</li>
+            <li>Auto-hides when a fullscreen app is in the foreground</li>
+            <li>Webview-based settings panel, launches at startup</li>
+          </ul>
+          <div class="tags">
+            <span class="tag">Rust</span><span class="tag">windows-rs</span><span class="tag">Win32</span><span class="tag">WebView</span>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <section id="coursework">
+      <div class="section-head">
+        <h2><span class="hash">#</span>Coursework</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="course">
+        <span class="c">// CIS 350, GVSU</span>
+        <ul>
+          <li><span class="k">team_18_calendar</span> = <a href="https://github.com/tunnellm/GVSU-CIS350-TEAM_18">Team 18 Calendar Project</a></li>
+          <li><span class="k">homework_2</span> = <a href="https://github.com/danieldcrrose/CIS350-HW2-Rose">Homework 2</a></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; <span id="year">2026</span> Daniel Rose</span>
+    <a href="https://github.com/danieldcrrose">github.com/danieldcrrose</a>
+  </div>
+</footer>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
 </body>
 </html>
